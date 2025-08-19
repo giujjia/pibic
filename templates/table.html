@@ -1,0 +1,367 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Table Viewer for proteomics data analysis and filtering">
+    <title>Table Viewer - PeptideLab</title>
+    <link rel="stylesheet" href="{% static 'css/global.css' %}">
+    <link rel="stylesheet" href="{% static 'table_app/css/table.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+</head>
+
+<body>
+    <header>
+        <nav class="navbar" aria-label="Main navigation">
+            <div class="container navbar-container">
+                <div class="navbar-logo">
+                    <a href="/" class="logo-link">
+                        <span class="logo-text">PeptideLab</span>
+                    </a>
+                </div>
+                <div class="navbar-links">
+                    <a href="/">Home</a>
+                    <a href="/missense">Missense</a>
+                    <a href="/table-viewer" class="active">Table Viewer</a>
+                    <a href="/about">About</a>
+                </div>
+                <button class="mobile-menu-toggle" aria-label="Toggle menu">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        <!-- Input Card Section -->
+        <section class="card input-card" id="uploadSection">
+            <div class="card-header">
+                <h1>Table Viewer</h1>
+                <button id="help-button" class="help-button" aria-label="Help">
+                    <i class="fas fa-question-circle"></i>
+                </button>
+            </div>
+
+            <form method="post" enctype="multipart/form-data" id="upload-form" aria-label="Data upload form">
+                {% csrf_token %}
+                <div class="single-tab">
+                    <div class="tab-header">
+                        <i class="fas fa-file-upload"></i> File Upload
+                    </div>
+                </div>
+
+                <div class="input-area">
+                    <div id="file-upload-area" class="file-upload-area" aria-label="File upload area">
+                        <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                        <span class="file-upload-text">Click to select a file or drag and drop</span>
+                        <span class="file-types">Supported formats: .csv, .xlsx, .xls</span>
+                    </div>
+                    <div id="file-info" class="file-info" style="display: none;">
+                        <span id="file-name"></span>
+                        <button type="button" id="remove-file" class="remove-file" aria-label="Remove file">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <input type="file" id="file-input" name="data_file" accept=".csv,.xlsx,.xls"
+                        aria-label="Upload data file" style="display: none;">
+                </div>
+
+                <input type="hidden" id="input-type" name="input_type" value="file">
+
+                <div class="form-actions">
+                    <button type="submit" id="process-button" class="button primary-button">Process Data</button>
+                    <button type="reset" id="reset-button" class="button secondary-button">
+                        <i class="fas fa-undo"></i>
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Ready to Get Started Section -->
+        <section class="ready-section" id="readySection">
+            <div class="ready-content">
+                <div class="ready-icon">
+                    <i class="fas fa-database"></i>
+                </div>
+                <h2>Ready to Get Started?</h2>
+                <p>Upload your proteomics data or explore our tool with example data</p>
+                <button type="button" class="button primary-button" id="load-example-btn">
+                    <i class="fas fa-search"></i>
+                    Explore with Example Data
+                </button>
+            </div>
+        </section>
+
+        <!-- Table Viewer Section (Initially Hidden) -->
+        <section class="card results-section" id="tableViewerSection" style="display: none;">
+            <div class="card-header">
+                <h2>Data Analysis</h2>
+            </div>
+
+            <!-- Controls Bar -->
+            <div class="controls-bar">
+                <div class="controls-left">
+                    <button type="button" class="text-button" id="columns-btn">
+                        <i class="fas fa-columns"></i>
+                        Columns
+                    </button>
+                    <button type="button" class="text-button" id="download-btn">
+                        <i class="fas fa-download"></i>
+                        Download
+                    </button>
+                </div>
+                <div class="controls-right">
+                    <button type="button" class="text-button" id="back-to-upload">
+                        <i class="fas fa-arrow-left"></i>
+                        Back to Upload
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filters Section -->
+            <div class="filters-section">
+                <h3><i class="fas fa-filter"></i> Filters</h3>
+                <div class="filters-grid">
+                    <div class="filter-group">
+                        <label>Add Gene Information</label>
+                        <button type="button" class="filter-btn" id="add-genes-btn">
+                            <i class="fas fa-plus"></i>
+                            Add Genes
+                        </button>
+                    </div>
+                    <div class="filter-group">
+                        <label>Add Protein Identification</label>
+                        <button type="button" class="filter-btn" id="add-protein-id-btn">
+                            <i class="fas fa-plus"></i>
+                            Add Protein ID
+                        </button>
+                    </div>
+                    <div class="filter-group">
+                        <label>Remove Contaminants</label>
+                        <button type="button" class="filter-btn filter-btn-danger" id="remove-contaminants-btn">
+                            <i class="fas fa-trash"></i>
+                            Remove Contaminants
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sheets Tabs -->
+            <div class="sheets-tabs">
+                <button type="button" class="sheet-tab active" data-sheet="proteins">
+                    <i class="fas fa-dna"></i>
+                    Proteins
+                </button>
+                <button type="button" class="sheet-tab" data-sheet="peptides">
+                    <i class="fas fa-link"></i>
+                    Peptides
+                </button>
+                <button type="button" class="sheet-tab" data-sheet="scans">
+                    <i class="fas fa-search"></i>
+                    Scans
+                </button>
+            </div>
+
+            <!-- Table Container -->
+            <div class="table-container">
+                <div class="table-wrapper">
+                    <table class="data-table" id="data-table">
+                        <thead>
+                            <tr id="table-header">
+                                <!-- Headers will be populated dynamically -->
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            <!-- Data will be populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Pagination will be added here dynamically -->
+            </div>
+
+            <!-- Table Info -->
+            <div class="table-info">
+                <span id="table-stats">No data loaded</span>
+            </div>
+        </section>
+    </main>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="modal-overlay" aria-hidden="true" role="dialog" aria-labelledby="modal-title">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modal-title" class="modal-title">Table Viewer Help</h3>
+                <button id="close-modal" class="close-button" aria-label="Close help modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-content">
+                <div class="help-section">
+                    <h4>How to use Table Viewer</h4>
+                    <div class="help-subsection">
+                        <h5><i class="fas fa-upload"></i> Data Upload</h5>
+                        <p>Upload your CSV or Excel file containing proteomics data with three sheets:</p>
+                        <ul>
+                            <li><strong>Proteins:</strong> Contains protein information including Locus, Description, Coverage, etc.</li>
+                            <li><strong>Peptides:</strong> Contains peptide sequences and related data</li>
+                            <li><strong>Scans:</strong> Contains scan data with charge states, retention times, etc.</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-subsection">
+                        <h5><i class="fas fa-filter"></i> Filter Options</h5>
+                        <ul>
+                            <li><strong>Add Genes:</strong> Adds gene symbol information to your data</li>
+                            <li><strong>Add Protein ID:</strong> Includes additional protein identification data</li>
+                            <li><strong>Remove Contaminants:</strong> Filters out contaminant proteins from your dataset</li>
+                        </ul>
+                    </div>
+
+                    <div class="help-subsection">
+                        <h5><i class="fas fa-columns"></i> Column Management</h5>
+                        <p>Use the Columns button to show or hide specific columns in your data table.</p>
+                    </div>
+
+                    <div class="help-subsection">
+                        <h5><i class="fas fa-download"></i> Data Export</h5>
+                        <p>Download your filtered data as an Excel file with all applied filters and modifications.</p>
+                    </div>
+                    
+                    <div class="help-subsection">
+                        <h5><i class="fas fa-keyboard"></i> Keyboard Shortcuts</h5>
+                        <ul>
+                            <li><strong>ESC:</strong> Close any open modal or notification</li>
+                        </ul>
+                    </div>
+
+                    <div class="help-subsection">
+                        <h5><i class="fas fa-list"></i> Pagination</h5>
+                        <p>Data is displayed in pages of 50 rows each. Use the pagination controls to navigate between pages.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Columns Modal -->
+    <div id="columns-modal" class="modal-overlay" aria-hidden="true" role="dialog">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Manage Columns</h3>
+                <button id="close-columns-modal" class="close-button" aria-label="Close columns modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-content">
+                <div class="columns-list" id="columns-list">
+                    <!-- Column checkboxes will be populated dynamically -->
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="button secondary-button" id="select-all-columns">Select All</button>
+                    <button type="button" class="button secondary-button" id="deselect-all-columns">Deselect All</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sheet Selection Modal for Add Genes -->
+    <div id="sheet-selection-modal" class="modal-overlay" aria-hidden="true" role="dialog">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="sheet-selection-title">Select Sheets</h3>
+                <button id="close-sheet-selection-modal" class="close-button" aria-label="Close sheet selection modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-content">
+                <p>Choose which sheets to add gene information to:</p>
+                <div class="sheet-selection-list">
+                    <div class="sheet-selection-item">
+                        <input type="checkbox" id="sheet-proteins" name="selected-sheets" value="proteins">
+                        <label for="sheet-proteins">
+                            <i class="fas fa-dna"></i>
+                            <strong>Proteins</strong>
+                            <span class="sheet-description">Uses Locus column to fetch gene information</span>
+                        </label>
+                    </div>
+                    <div class="sheet-selection-item">
+                        <input type="checkbox" id="sheet-peptides" name="selected-sheets" value="peptides">
+                        <label for="sheet-peptides">
+                            <i class="fas fa-link"></i>
+                            <strong>Peptides</strong>
+                            <span class="sheet-description">Uses TheProteinLocci column to fetch gene information</span>
+                        </label>
+                    </div>
+                    <div class="sheet-selection-item">
+                        <input type="checkbox" id="sheet-scans" name="selected-sheets" value="scans">
+                        <label for="sheet-scans">
+                            <i class="fas fa-search"></i>
+                            <strong>Scans</strong>
+                            <span class="sheet-description">Uses TheProteinLocci column to fetch gene information</span>
+                        </label>
+                    </div>
+                </div>
+                <input type="hidden" id="sheet-selection-action" value="">
+                <div class="modal-actions">
+                    <button type="button" class="button primary-button" id="confirm-sheet-selection">
+                        <i class="fas fa-check"></i>
+                        Add Genes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contaminant Selection Modal -->
+    <div id="contaminant-selection-modal" class="modal-overlay" aria-hidden="true" role="dialog">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Remove Contaminants</h3>
+                <button id="close-contaminant-selection-modal" class="close-button" aria-label="Close contaminant selection modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-content">
+                <p>Choose which sheets to remove contaminants from:</p>
+                <div class="sheet-selection-list">
+                    <div class="sheet-selection-item">
+                        <input type="checkbox" id="contaminant-proteins" name="contaminant-sheets" value="proteins">
+                        <label for="contaminant-proteins">
+                            <i class="fas fa-dna"></i>
+                            <strong>Proteins</strong>
+                            <span class="sheet-description">Removes rows where Locus contains "contaminant"</span>
+                        </label>
+                    </div>
+                    <div class="sheet-selection-item">
+                        <input type="checkbox" id="contaminant-peptides" name="contaminant-sheets" value="peptides">
+                        <label for="contaminant-peptides">
+                            <i class="fas fa-link"></i>
+                            <strong>Peptides</strong>
+                            <span class="sheet-description">Removes rows where TheProteinLocci contains "contaminant"</span>
+                        </label>
+                    </div>
+                    <div class="sheet-selection-item">
+                        <input type="checkbox" id="contaminant-scans" name="contaminant-sheets" value="scans">
+                        <label for="contaminant-scans">
+                            <i class="fas fa-search"></i>
+                            <strong>Scans</strong>
+                            <span class="sheet-description">Removes scans linked to contaminant peptides</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="button filter-btn-danger" id="confirm-contaminant-removal">
+                        <i class="fas fa-trash"></i>
+                        Remove Contaminants
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'table_app/js/table.js' %}"></script>
+</body>
+
+</html>

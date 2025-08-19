@@ -1,0 +1,385 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Tool for generating peptide mutations from sequences">
+    <title>Missense Mutation Tool - PeptideLab</title>
+    <link rel="stylesheet" href="{% static 'missense_app/css/missense.css' %}">
+    <link rel="stylesheet" href="{% static 'css/global.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+</head>
+
+<body>
+    <header>
+        <nav class="navbar" aria-label="Main navigation">
+            <div class="container navbar-container">
+                <div class="navbar-logo">
+                    <a href="/" class="logo-link">
+                        <span class="logo-text">PeptideLab</span>
+                    </a>
+                </div>
+                <div class="navbar-links">
+                    <a href="/">Home</a>
+                    <a href="/missense" class="active">Missense</a>
+                    <a href="/table-viewer">Table Viewer</a>
+                    <a href="/about">About</a>
+                </div>
+                <button class="mobile-menu-toggle" aria-label="Toggle menu">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        <section class="card input-card">
+            <div class="card-header">
+                <h1>Missense Mutation Tool</h1>
+                <button id="help-button" class="help-button" aria-label="Help">
+                    <i class="fas fa-question-circle"></i>
+                </button>
+            </div>
+
+            <form method="post" enctype="multipart/form-data" id="mutation-form" aria-label="Mutation form">
+                {% csrf_token %}
+                <div class="tabs" role="tablist">
+                    <button type="button" class="tab active" data-tab="text" role="tab" aria-selected="true"
+                        aria-controls="text-content">
+                        <i class="fas fa-keyboard"></i> Text Input
+                    </button>
+                    <button type="button" class="tab" data-tab="file" role="tab" aria-selected="false"
+                        aria-controls="file-content">
+                        <i class="fas fa-file-upload"></i> File Upload
+                    </button>
+                </div>
+
+                <div id="text-content" class="tab-content active" role="tabpanel" aria-labelledby="text-tab">
+                    <div class="input-area">
+                        <label for="peptide-input" class="sr-only">Peptide sequence</label>
+                        <textarea id="peptide-input" name="peptide_text"
+                            placeholder="Enter peptide sequence (e.g., NP_000006.2 rs1208 Arg 268 Ile)"
+                            aria-label="Peptide sequence input"></textarea>
+                    </div>
+                </div>
+
+                <div id="file-content" class="tab-content" role="tabpanel" aria-labelledby="file-tab">
+                    <div class="input-area">
+                        <div id="file-upload-area" class="file-upload-area" aria-label="File upload area">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span class="file-upload-text">Click to select a file or drag and drop</span>
+                            <span class="file-types">Supported formats: .txt, .fasta, .csv, .tsv</span>
+                        </div>
+                        <div id="file-info" class="file-info">
+                            <span id="file-name"></span>
+                            <button type="button" id="remove-file" class="remove-file" aria-label="Remove file">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <input type="file" id="file-input" name="peptide_file" accept=".txt,.fasta,.csv,.tsv"
+                            aria-label="Upload peptide file">
+                    </div>
+                </div>
+
+                <input type="hidden" id="input-type" name="input_type" value="text">
+
+                <div class="form-actions">
+                    <button type="submit" id="process-button" class="button primary-button">Process Data</button>
+                    <button type="reset" id="reset-button" class="button secondary-button">
+                        <i class="fas fa-undo"></i>
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        {% if results %}
+        <section id="results" class="card results-section" style="display: block;">
+            <div class="card-header">
+                <h2>Results</h2>
+                <div class="actions">
+                    <button id="collapse-all" class="text-button" aria-label="Collapse all sections">
+                        <i class="fas fa-compress-alt"></i> Collapse All
+                    </button>
+                    <button id="expand-all" class="text-button" aria-label="Expand all sections">
+                        <i class="fas fa-expand-alt"></i> Expand All
+                    </button>
+                </div>
+            </div>
+
+            <div class="result-item">
+                <div class="result-header" data-result="dbpepmutref" role="button" aria-expanded="true"
+                    aria-controls="dbpepmutref-content">
+                    <span>dbpepmutref</span>
+                    <span class="toggle-icon"><i class="fas fa-chevron-up"></i></span>
+                </div>
+                <div class="result-content" id="dbpepmutref-content">
+                    <pre>{{ results.dbpepmutref }}</pre>
+                    <div class="result-actions">
+                        <button class="action-button copy-button" data-content="dbpepmutref"
+                            aria-label="Copy dbpepmutref content">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                        <a href="{% url 'download_file' file_type='dbpepmutref' %}" class="action-button download"
+                            download aria-label="Download dbpepmutref file">
+                            <i class="fas fa-download"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="result-item">
+                <div class="result-header" data-result="dbsaida" role="button" aria-expanded="false"
+                    aria-controls="dbsaida-content">
+                    <span>dbsaida</span>
+                    <span class="toggle-icon"><i class="fas fa-chevron-down"></i></span>
+                </div>
+                <div class="result-content" id="dbsaida-content" style="display: none;">
+                    <pre>{{ results.dbsaida }}</pre>
+                    <div class="result-actions">
+                        <button class="action-button copy-button" data-content="dbsaida"
+                            aria-label="Copy dbsaida content">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                        <a href="{% url 'download_file' file_type='dbsaida' %}" class="action-button download" download
+                            aria-label="Download dbsaida file">
+                            <i class="fas fa-download"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="result-item">
+                <div class="result-header" data-result="dbfinal" role="button" aria-expanded="false"
+                    aria-controls="dbfinal-content">
+                    <span>dbfinal</span>
+                    <span class="toggle-icon"><i class="fas fa-chevron-down"></i></span>
+                </div>
+                <div class="result-content" id="dbfinal-content" style="display: none;">
+                    <pre>{{ results.dbfinal }}</pre>
+                    <div class="result-actions">
+                        <button class="action-button copy-button" data-content="dbfinal"
+                            aria-label="Copy dbfinal content">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                        <a href="{% url 'download_file' file_type='dbfinal' %}" class="action-button download" download
+                            aria-label="Download dbfinal file">
+                            <i class="fas fa-download"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        {% if error %}
+        <section class="card error-section">
+            <div class="card-header">
+                <h2>Error</h2>
+            </div>
+            <div class="error-message" role="alert">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>{{ error }}</p>
+            </div>
+        </section>
+        {% endif %}
+    </main>
+
+    <div id="help-modal" class="modal-overlay" aria-hidden="true" role="dialog" aria-labelledby="modal-title">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modal-title" class="modal-title">Missense Mutation Tool Help</h3>
+                <button id="close-modal" class="close-button" aria-label="Close help modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-content">
+                <div class="help-section">
+                    <h4>Input Format</h4>
+                    <p>The tool accepts peptide sequences in several formats. For basic mutations, use the following
+                        format:</p>
+                    <div class="example">
+                        <code>Protein_ID SNP_ID Amino_acid Position Mutation</code>
+                    </div>
+                    <p>For example:</p>
+                    <div class="example">
+                        <code>NP_000006.2 rs1208 Arg 268 Ile</code>
+                    </div>
+
+                    <h5>Field Descriptions</h5>
+                    <table>
+                        <tr>
+                            <th>Field</th>
+                            <th>Description</th>
+                            <th>Example</th>
+                        </tr>
+                        <tr>
+                            <td>Protein_ID</td>
+                            <td>Protein accession number</td>
+                            <td>NP_000006.2</td>
+                        </tr>
+                        <tr>
+                            <td>SNP_ID</td>
+                            <td>SNP identifier</td>
+                            <td>rs1208</td>
+                        </tr>
+                        <tr>
+                            <td>Amino_acid</td>
+                            <td>Reference amino acid (3-letter or 1-letter code)</td>
+                            <td>Arg or R</td>
+                        </tr>
+                        <tr>
+                            <td>Position</td>
+                            <td>Position in protein sequence</td>
+                            <td>268</td>
+                        </tr>
+                        <tr>
+                            <td>Mutation</td>
+                            <td>Mutated amino acid (3-letter or 1-letter code)</td>
+                            <td>Ile or I</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="help-section">
+                    <h4>File Formats</h4>
+                    <p>You can upload a text file containing multiple entries, one per line, in the same format as
+                        above.
+                        The file should be plain text (.txt).
+                    </p>
+                </div>
+
+                <div class="help-section">
+                    <h4>Amino Acid Codes</h4>
+                    <p>The tool accepts both 3-letter and 1-letter amino acid codes.</p>
+                    <table>
+                        <tr>
+                            <th>1-letter</th>
+                            <th>3-letter</th>
+                            <th>Amino Acid</th>
+                        </tr>
+                        <tr>
+                            <td>A</td>
+                            <td>Ala</td>
+                            <td>Alanine</td>
+                        </tr>
+                        <tr>
+                            <td>R</td>
+                            <td>Arg</td>
+                            <td>Arginine</td>
+                        </tr>
+                        <tr>
+                            <td>N</td>
+                            <td>Asn</td>
+                            <td>Asparagine</td>
+                        </tr>
+                        <tr>
+                            <td>D</td>
+                            <td>Asp</td>
+                            <td>Aspartic Acid</td>
+                        </tr>
+                        <tr>
+                            <td>C</td>
+                            <td>Cys</td>
+                            <td>Cysteine</td>
+                        </tr>
+                        <tr>
+                            <td>Q</td>
+                            <td>Gln</td>
+                            <td>Glutamine</td>
+                        </tr>
+                        <tr>
+                            <td>E</td>
+                            <td>Glu</td>
+                            <td>Glutamic Acid</td>
+                        </tr>
+                        <tr>
+                            <td>G</td>
+                            <td>Gly</td>
+                            <td>Glycine</td>
+                        </tr>
+                        <tr>
+                            <td>H</td>
+                            <td>His</td>
+                            <td>Histidine</td>
+                        </tr>
+                        <tr>
+                            <td>I</td>
+                            <td>Ile</td>
+                            <td>Isoleucine</td>
+                        </tr>
+                        <tr>
+                            <td>L</td>
+                            <td>Leu</td>
+                            <td>Leucine</td>
+                        </tr>
+                        <tr>
+                            <td>K</td>
+                            <td>Lys</td>
+                            <td>Lysine</td>
+                        </tr>
+                        <tr>
+                            <td>M</td>
+                            <td>Met</td>
+                            <td>Methionine</td>
+                        </tr>
+                        <tr>
+                            <td>F</td>
+                            <td>Phe</td>
+                            <td>Phenylalanine</td>
+                        </tr>
+                        <tr>
+                            <td>P</td>
+                            <td>Pro</td>
+                            <td>Proline</td>
+                        </tr>
+                        <tr>
+                            <td>S</td>
+                            <td>Ser</td>
+                            <td>Serine</td>
+                        </tr>
+                        <tr>
+                            <td>T</td>
+                            <td>Thr</td>
+                            <td>Threonine</td>
+                        </tr>
+                        <tr>
+                            <td>W</td>
+                            <td>Trp</td>
+                            <td>Tryptophan</td>
+                        </tr>
+                        <tr>
+                            <td>Y</td>
+                            <td>Tyr</td>
+                            <td>Tyrosine</td>
+                        </tr>
+                        <tr>
+                            <td>V</td>
+                            <td>Val</td>
+                            <td>Valine</td>
+                        </tr>
+                        <tr>
+                            <td>Z</td>
+                            <td>Ter</td>
+                            <td>Termination</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="help-section">
+                    <h4>Output Formats</h4>
+                    <ul class="help-list">
+                        <li><strong>dbpepmutref</strong>: Reference peptide with mutation information</li>
+                        <li><strong>dbsaida</strong>: FASTA-formatted mutated peptide</li>
+                        <li><strong>dbfinal</strong>: Extended peptide sequence with context</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'missense_app/js/script.js' %}"></script>
+</body>
+
+</html>

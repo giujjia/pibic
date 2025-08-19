@@ -1,0 +1,132 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Bioinformatics platform for protein analysis and mutation">
+    <title>PeptideLab</title>
+    <link rel="stylesheet" href="{% static 'css/global.css' %}">
+    <link rel="stylesheet" href="{% static 'home/css/home.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+</head>
+
+<body>
+    <header>
+        <nav class="navbar" aria-label="Main navigation">
+            <div class="container navbar-container">
+                <div class="navbar-logo">
+                    <a href="/" class="logo-link">
+                        <span class="logo-text">PeptideLab</span>
+                    </a>
+                </div>
+                <div class="navbar-links">
+                    <a href="/" class="active">Home</a>
+                    <a href="/missense">Missense</a>
+                    <a href="/table-viewer">Table Viewer</a>
+                    <a href="/about">About</a>
+                </div>
+                <button class="mobile-menu-toggle" aria-label="Toggle menu">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <div class="container">
+                <div class="hero-content">
+                    <h1 class="hero-title">Bioinformatics Platform</h1>
+                    <p class="hero-description">
+                        Advanced tool for protein analysis and mutation. Process mutation data, 
+                        visualize tables and analyze protein sequences with ease.
+                    </p>
+                    <div class="hero-actions">
+                        <a href="/missense" class="button primary-button hero-button">
+                            Start Mutation Analysis
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                        <a href="/about" class="button secondary-button hero-button">
+                            Learn More
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="features-section">
+            <div class="container">
+                <h2 class="features-title">Main Features</h2>
+                
+                <div class="features-grid">
+                    <!-- Missense Mutation Tool -->
+                    <div class="feature-card">
+                        <div class="feature-header">
+                            <div class="feature-icon">
+                                <i class="fas fa-dna"></i>
+                            </div>
+                            <h3 class="feature-title">Missense Mutation Tool</h3>
+                        </div>
+                        <p class="feature-description">
+                            Process mutation files and generate mutated peptides
+                        </p>
+                        <ul class="feature-list">
+                            <li>Upload CSV/Excel files</li>
+                            <li>Process multiple mutations</li>
+                            <li>Reference protein database</li>
+                            <li>Download results</li>
+                        </ul>
+                        <a href="/missense" class="button feature-button">
+                            Access Tool
+                        </a>
+                    </div>
+
+                    <!-- Table Viewer -->
+                    <div class="feature-card">
+                        <div class="feature-header">
+                            <div class="feature-icon visualizer-icon">
+                                <i class="fas fa-table"></i>
+                            </div>
+                            <h3 class="feature-title">Table Viewer</h3>
+                        </div>
+                        <p class="feature-description">
+                            Visualize and filter tabular data interactively
+                        </p>
+                        <ul class="feature-list">
+                            <li>Multiple format support</li>
+                            <li>Advanced filters</li>
+                            <li>Column sorting</li>
+                            <li>Export filtered data</li>
+                        </ul>
+                        <a href="/table-viewer" class="button feature-button secondary">
+                            Access Viewer
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <i class="fas fa-dna logo-icon"></i>
+                    <span class="logo-text">PeptideLab</span>
+                </div>
+                <p class="footer-description">
+                    Bioinformatics platform for protein analysis and mutation
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{% static 'home/js/home.js' %}"></script>
+</body>
+
+</html>
