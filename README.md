@@ -1,0 +1,1 @@
+Projeto de Iniciação Científica desenvolvido na Universidade Federal de Rondônia (UNIR), que consiste em uma ferramenta web em Django voltada à geração de bancos de dados proteicos personalizados, com foco na identificação de proteínas variantes a partir da integração de dados genômicos e proteômicos.
